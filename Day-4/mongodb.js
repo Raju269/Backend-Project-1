@@ -4,7 +4,9 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from 'jsonwebtoken';
 import dns from "dns";
+import { loginLimiter } from "./ratelimiter.js";
 import { type } from "os";
+import asyncHandler from "./asyncHandler.js";
 dns.setServers(['1.1.1.1','8.8.8.8']);
 
 dotenv.config();
@@ -39,26 +41,30 @@ const User = mongoose.model('User',userSchema);
 
 // Register api 
 
-app.post("/api/v1/auth/register",async(req,res)=>{
-    try{
-        const {username , email } = req.body;
-        let password = req.body.password;
+app.post("/api/v1/auth/register", asyncHandler (async(req,res)=>{
+    const {username , email } = req.body;
+    let password = req.body.password;
+    // try{
 
-        let hashedPassword = await bcrypt.hash(password,10);
+    //     let hashedPassword = await bcrypt.hash(password,10);
 
-        const user = new User({username , email , password : hashedPassword});
-        const savedUser = await user.save();
+    //     const user = new User({username , email , password : hashedPassword});
+    //     const savedUser = await user.save();
 
-        res.status(201).json({
-            message:"User Created",
-            user : savedUser
-        });
-    }catch(err){
-        res.send(400).json({
-            message:err.message
-        });
-    }
-})
+    //     res.status(201).json({
+    //         message:"User Created",
+    //         user : savedUser
+    //     });
+    // }catch(err){
+    //     res.send(400).json({
+    //         message:err.message});
+    // }
+
+    // alternate method 
+    // const user = await  User.findOne({email});
+    // if(!user) throw new ApiError(404," ")
+
+}));
 
 
 // veriication token and middleware 
@@ -94,7 +100,7 @@ app.get("/api/v1/auth/users", verificationToken, async (req, res) => {
 });
 
 // login ka liya 
-app.post("/api/v1/auth/login",async (req, res)=>{
+app.post("/api/v1/auth/login",loginLimiter, async (req, res)=>{
     const {email , password } = req.body;
     try{
         const user = await User.findOne({email});
