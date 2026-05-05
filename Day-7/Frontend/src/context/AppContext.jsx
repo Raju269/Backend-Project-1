@@ -10,6 +10,9 @@ export const AppProvider = ({ children }) => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('user') || 'null') } catch { return null }
+  })
 
   useEffect(() => {
     if (dark) document.documentElement.classList.add('dark')
@@ -27,6 +30,17 @@ export const AppProvider = ({ children }) => {
       .then(d => { setProducts(d.products); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
+
+  const login = (userData) => {
+    setUser(userData)
+    localStorage.setItem('user', JSON.stringify(userData))
+  }
+
+  const logout = () => {
+    setUser(null)
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+  }
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -57,6 +71,7 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{
       dark, setDark,
+      user, login, logout,
       cart, addToCart, increase, decrease, removeFromCart, clearCart,
       cartCount, cartTotal,
       products, loading,

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { ShoppingCart, Sun, Moon, Search, User, Home, Grid, LogIn, Menu, X } from 'lucide-react'
+import { ShoppingCart, Sun, Moon, Search, User, Home, Grid, LogIn, Menu, X, LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
 export default function Navbar() {
-  const { dark, setDark, search, setSearch, cartCount } = useApp()
+  const { dark, setDark, search, setSearch, cartCount, user, logout } = useApp()
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -15,12 +15,18 @@ export default function Navbar() {
     setMenuOpen(false)
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+    setMenuOpen(false)
+  }
+
   const navItems = [
     { to: '/', icon: <Home size={15} />, label: 'Home' },
     { to: '/categories', icon: <Grid size={15} />, label: 'Categories' },
     { to: '/cart', icon: <ShoppingCart size={15} />, label: 'Cart', badge: cartCount },
     { to: '/profile', icon: <User size={15} />, label: 'Profile' },
-    { to: '/login', icon: <LogIn size={15} />, label: 'Login' },
+    ...(!user ? [{ to: '/login', icon: <LogIn size={15} />, label: 'Login' }] : []),
   ]
 
   return (
@@ -88,6 +94,24 @@ export default function Navbar() {
           }}>
             {dark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 6 }}>
+              <span style={{
+                fontSize: 13, fontWeight: 700, color: 'var(--accent)',
+                background: 'var(--accent-light)', padding: '5px 12px', borderRadius: 99,
+                border: '1px solid var(--border)',
+              }}>
+                👤 {user.username}
+              </span>
+              <button onClick={handleLogout} style={{
+                width: 36, height: 36, borderRadius: 10,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: '#fee2e2', color: '#ef4444',
+              }}>
+                <LogOut size={16} />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mobile-only" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
