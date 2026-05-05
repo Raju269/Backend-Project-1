@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0fdf4;
+  --bg2: #dcfce7;
+  --card: #ffffff;
+  --text: #0f2417;
+  --text2: #1a3a26;
+  --muted: #5a7a65;
+  --border: #a7f3c0;
+  --accent: #00c853;
+  --accent-hover: #00a846;
+  --accent-dark: #007a32;
+  --accent-light: #e8fff1;
+  --accent-glow: rgba(0,200,83,0.18);
+  --danger: #ef4444;
+  --nav-bg: rgba(255,255,255,0.93);
+  --shadow-sm: 0 1px 4px rgba(0,180,60,0.07);
+  --shadow-md: 0 4px 20px rgba(0,180,60,0.12);
+  --shadow-lg: 0 8px 36px rgba(0,180,60,0.16);
+}
+
+html.dark {
+  --bg: #0a0f1e;
+  --bg2: #0f172a;
+  --card: #111827;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --muted: #64748b;
+  --border: #1e3a5f;
+  --accent: #22d3ee;
+  --accent-hover: #06b6d4;
+  --accent-dark: #0891b2;
+  --accent-light: #0c2340;
+  --accent-glow: rgba(34,211,238,0.18);
+  --danger: #f87171;
+  --nav-bg: rgba(10,15,30,0.95);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 36px rgba(0,0,0,0.7);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.5;
+  transition: background 0.3s, color 0.3s;
+}
+
+img { display: block; max-width: 100%; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+input, select { font-family: inherit; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 99px; }
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 16px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  opacity: 0;
+  animation: fadeUp 0.45s ease forwards;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  font-weight: 800;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
