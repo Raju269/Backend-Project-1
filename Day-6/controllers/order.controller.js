@@ -1,66 +1,42 @@
-import express from "express";
-import Order from "../models/orders.model.js";
-// import asyncHandler from "../utils/asynchandler.utils.js";\
-import asyncHandler from "../utils/asyncHandler.utils.js";
-import ApiError from "../utils/api.error.utils.js";
-// import verifyToken from "../middlewares/verifytoken.middleware.js";
-// ✅ CORRECT
-import verifyToken from "../middleware/verifytoken.middleware.js";
-import { createOrderLimiter, getOrdersLimiter } from "../config/rate.limiter.config.js";
+import express from 'express'
+import Order from '../models/orders.model.js'
+import asyncHandler from '../utils/asyncHandler.utils.js'
 
-const orderController = express.Router();
+const orderController = express.Router()
 
-// POST /api/orders — create order, requires auth token
-const createOrder = asyncHandler(async (req, res) => {
-  const { orderItems, totalAmount } = req.body;
-  if (!orderItems || orderItems.length === 0) {
-    throw new ApiError(400, "No order items provided");
-  }
-  const order = await Order.create({ user: req.user.id, orderItems, totalAmount });
-  res.status(201).json({ order });
-});
+// POST /api/orders — create order (user)
+orderController.post('/', asyncHandler(async (req, res) => {
+  const { userId, userName, userEmail, items, subtotal, gst, coupon, discount, grandTotal, address, payMethod } = req.body
+  if (!userId || !items?.length) return res.status(400).json({ message: 'Missing required fields' })
+
+  const order = await Order.create({ userId, userName, userEmail, items, subtotal, gst, coupon, discount, grandTotal, address, payMethod })
+  res.status(201).json({ message: 'Order placed', order })
+}))
+
+// GET /api/orders/user/:userId — user's own orders
+orderController.get('/user/:userId', asyncHandler(async (req, res) => {
+  const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })
+  res.status(200).json({ orders })
+}))
 
 // GET /api/orders — all orders (admin)
-const getAllOrders = asyncHandler(async (_req, res) => {
-  const orders = await Order.find().populate("user", "username email");
-  res.status(200).json({ orders });
-});
+orderController.get('/', asyncHandler(async (req, res) => {
+  const orders = await Order.find().sort({ createdAt: -1 })
+  res.status(200).json({ orders })
+}))
 
-// GET /api/orders/myorders — logged-in user's orders
-const getUserOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user.id });
-  res.status(200).json({ orders });
-});
+// PUT /api/orders/:id/status — update status (admin)
+orderController.put('/:id/status', asyncHandler(async (req, res) => {
+  const { status } = req.body
+  const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true })
+  if (!order) return res.status(404).json({ message: 'Order not found' })
+  res.status(200).json({ message: 'Status updated', order })
+}))
 
-// GET /api/orders/:id
-const getOrderById = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id).populate("user", "username email");
-  if (!order) throw new ApiError(404, "Order not found");
-  res.status(200).json({ order });
-});
+// DELETE /api/orders/:id (admin)
+orderController.delete('/:id', asyncHandler(async (req, res) => {
+  await Order.findByIdAndDelete(req.params.id)
+  res.status(200).json({ message: 'Order deleted' })
+}))
 
-// PUT /api/orders/:id/status
-const updateOrderStatus = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) throw new ApiError(404, "Order not found");
-  order.status = req.body.status;
-  await order.save();
-  res.status(200).json({ order });
-});
-
-// DELETE /api/orders/:id
-const deleteOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) throw new ApiError(404, "Order not found");
-  await order.deleteOne();
-  res.status(200).json({ message: "Order deleted successfully" });
-});
-
-orderController.post("/", createOrderLimiter, verifyToken, createOrder);
-orderController.get("/", getOrdersLimiter, verifyToken, getAllOrders);
-orderController.get("/myorders", verifyToken, getUserOrders);
-orderController.get("/:id", verifyToken, getOrderById);
-orderController.put("/:id/status", verifyToken, updateOrderStatus);
-orderController.delete("/:id", verifyToken, deleteOrder);
-
-export default orderController;
+export default orderController

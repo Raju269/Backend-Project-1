@@ -1,41 +1,49 @@
-import User from "../models/users.model.js";
-import bcrypt from "bcryptjs";
-// import asyncHandler from "../utils/asynchandler.utils.js";
-import asyncHandler from "../utils/asyncHandler.utils.js";
-import ApiError from "../utils/api.error.utils.js";
+import User from '../models/users.model.js'
+import bcrypt from 'bcryptjs'
+import asyncHandler from '../utils/asyncHandler.utils.js'
+import { uploadOnCloudinary } from '../utils/cloudinary.utils.js'
 
-// GET /api/v1/auth/allusers — returns all registered users
-export const getAllUsers = asyncHandler(async (_req, res) => {
-  const users = await User.find();
-  res.status(200).json(users);
-});
+// GET /api/auth/me  — get logged-in user profile
+export const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select('-password')
+  if (!user) return res.status(404).json({ message: 'User not found' })
+  res.status(200).json({ user })
+})
 
-// PUT /api/v1/auth/update/:id — updates username, email, or password
-// only provided fields are updated (partial update)
+// PUT /api/auth/update/:id  — update profile fields
 export const updateUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, phone, bio, dob } = req.body
+  const user = await User.findById(req.params.id)
+  if (!user) return res.status(404).json({ message: 'User not found' })
 
-  const user = await User.findById(req.params.id);
-  if (!user) throw new ApiError(404, "User not found");
+  if (username) user.username = username
+  if (email)    user.email    = email
+  if (phone !== undefined) user.phone = phone
+  if (bio   !== undefined) user.bio   = bio
+  if (dob   !== undefined) user.dob   = dob
 
-  if (username) user.username = username;
-  if (email) user.email = email;
-
-  // re-hash if password is being changed
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
+  // avatar upload via multer + cloudinary
+  if (req.file) {
+    const result = await uploadOnCloudinary(req.file.path)
+    if (result) user.avatar = result.secure_url
   }
 
-  await user.save();
-  res.status(200).json({ user });
-});
+  await user.save()
+  const updated = user.toObject()
+  delete updated.password
+  res.status(200).json({ message: 'Profile updated', user: updated })
+})
 
-// DELETE /api/v1/auth/delete/:id — permanently removes a user
+// DELETE /api/auth/delete/:id
 export const deleteUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) throw new ApiError(404, "User not found");
+  const user = await User.findById(req.params.id)
+  if (!user) return res.status(404).json({ message: 'User not found' })
+  await user.deleteOne()
+  res.status(200).json({ message: 'User deleted successfully' })
+})
 
-  await user.deleteOne();
-  res.status(200).json({ message: "User deleted successfully" });
-});
+// GET /api/auth/users  — all users (admin)
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find().select('-password')
+  res.status(200).json(users)
+})
