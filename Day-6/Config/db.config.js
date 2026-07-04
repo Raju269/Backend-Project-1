@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import dns from "dns";
 
 dotenv.config();
+// thisi is important for connect to internet if ip address phasing problem issue 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const connectDB = async () => { 
